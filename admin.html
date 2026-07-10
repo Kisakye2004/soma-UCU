@@ -542,7 +542,7 @@
 
         async function loadData() {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/admin/conversations?password=${adminPassword}`);
+                const response = await fetch(`/admin/conversations?password=${adminPassword}`);
                 const data = await response.json();
 
                 allStudents = data.students;
@@ -700,7 +700,7 @@
 
     if (action === 'student' && studentId) {
         try {
-            await fetch(`http://127.0.0.1:8000/admin/delete/${studentId}?password=${adminPassword}`, {
+            await fetch(`/admin/delete/${studentId}?password=${adminPassword}`, {
                 method: 'DELETE'
             });
             selectedStudentId = null;
@@ -716,7 +716,7 @@
 
     if (action === 'all') {
         try {
-            await fetch(`http://127.0.0.1:8000/admin/delete-all?password=${adminPassword}`, {
+            await fetch(`/admin/delete-all?password=${adminPassword}`, {
                 method: 'DELETE'
             });
             selectedStudentId = null;
