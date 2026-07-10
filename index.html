@@ -274,6 +274,7 @@
     </div>
 
     <script>
+        // ===== STUDENT ID MANAGEMENT =====
         function getStudentID() {
             let studentID = localStorage.getItem('soma_student_id');
             if (!studentID) {
@@ -291,6 +292,7 @@
         let conversationHistory = [];
         let sessionClosed = false;
 
+        // ===== UI FUNCTIONS =====
         function startChat() {
             document.getElementById('disclaimer-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
@@ -336,6 +338,7 @@
             addMessage('soma', 'Hello again! I am here whenever you need support. How are you feeling today?');
         }
 
+        // ===== SEND MESSAGE =====
         async function sendMessage() {
             if (sessionClosed) return;
 
@@ -343,14 +346,19 @@
             const text = input.value.trim();
             if (!text) return;
 
+            // Add user message to chat
             addMessage('user', text);
             input.value = '';
 
+            // Add to history
             conversationHistory.push({ role: 'user', content: text });
-            addMessage('soma', 'SOMA is typing...');
+
+            // Show typing indicator
+            const typingId = addTypingIndicator();
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/chat', {
+                // ===== FIXED: Using relative URL =====
+                const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -360,9 +368,14 @@
                     })
                 });
 
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
-                const messages = document.getElementById('chat-messages');
-                messages.removeChild(messages.lastChild);
 
                 if (data.closing) {
                     addMessage('soma', data.response, true);
@@ -374,9 +387,30 @@
                 conversationHistory.push({ role: 'assistant', content: data.response });
 
             } catch (error) {
-                const messages = document.getElementById('chat-messages');
-                messages.removeChild(messages.lastChild);
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+                
+                console.error('Error sending message:', error);
                 addMessage('soma', 'I am having trouble connecting right now. If you need immediate support please contact UCU Counselling or Butabika National Referral Hospital on 0414 305 000.');
+            }
+        }
+
+        // ===== TYPING INDICATOR HELPERS =====
+        function addTypingIndicator() {
+            const messagesDiv = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'message soma-message';
+            typingDiv.textContent = 'SOMA is typing...';
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return 'typing-indicator';
+        }
+
+        function removeTypingIndicator(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
             }
         }
     </script>
