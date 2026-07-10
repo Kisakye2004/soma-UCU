@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Groq AI client
-client = Groq(api_key=os.environ.get("GROQ_API_KEY", "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"))
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # Database
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:root@localhost:5432/soma_db")
