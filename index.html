@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOMA - UCU Mental Health Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* DISCLAIMER SCREEN */
+        #disclaimer-screen {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 24px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        #disclaimer-screen h1 {
+            color: #2c7a4b;
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+
+        #disclaimer-screen h2 {
+            color: #555;
+            font-size: 15px;
+            margin-bottom: 16px;
+            font-weight: normal;
+        }
+
+        #disclaimer-screen p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        #disclaimer-screen ul {
+            color: #666;
+            font-size: 13px;
+            margin-left: 18px;
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        .consent-btn {
+            background-color: #2c7a4b;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            touch-action: manipulation;
+        }
+
+        .consent-btn:hover { background-color: #235f3a; }
+        .consent-btn:active { background-color: #1a4a2e; }
+
+        /* CHAT SCREEN */
+        #chat-screen {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            height: 100dvh;
+            background: white;
+            border-radius: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+        }
+
+        @media (min-width: 640px) {
+            body {
+                padding: 20px;
+            }
+            #chat-screen {
+                position: relative;
+                height: 90vh;
+                border-radius: 12px;
+            }
+        }
+
+        #chat-header {
+            background-color: #2c7a4b;
+            color: white;
+            padding: 14px 16px;
+            flex-shrink: 0;
+        }
+
+        #chat-header h2 { font-size: 17px; }
+
+        #chat-header p {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .soma-message {
+            background-color: #f0f4f8;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .user-message {
+            background-color: #2c7a4b;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .closing-message {
+            background-color: #fff8e1;
+            color: #555;
+            align-self: flex-start;
+            border: 1px solid #ffe082;
+            max-width: 90%;
+        }
+
+        #chat-input-area {
+            display: flex;
+            padding: 10px 12px;
+            border-top: 1px solid #eee;
+            gap: 8px;
+            flex-shrink: 0;
+            background: white;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            min-width: 0;
+        }
+
+        #user-input:focus { border-color: #2c7a4b; }
+
+        #user-input:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        #send-btn {
+            background-color: #2c7a4b;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+
+        #send-btn:hover { background-color: #235f3a; }
+        #send-btn:active { background-color: #1a4a2e; }
+        #send-btn:disabled { background-color: #aaa; cursor: not-allowed; }
+
+        #chat-footer {
+            text-align: center;
+            padding: 6px 12px;
+            font-size: 10px;
+            color: #999;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+            background: white;
+        }
+
+        #new-session-btn {
+            display: none;
+            margin: 8px auto;
+            padding: 10px 24px;
+            background-color: #2c7a4b;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DISCLAIMER SCREEN -->
+    <div id="disclaimer-screen">
+        <h1>Welcome to SOMA</h1>
+        <h2>UCU Mental Health Support Assistant</h2>
+        <p><strong>Please read before continuing:</strong></p>
+        <p>SOMA is an AI-powered mental health support chatbot designed for Uganda Christian University students. Before you begin, please note:</p>
+        <ul>
+            <li>SOMA is <strong>not</strong> a clinical service or replacement for professional counselling</li>
+            <li>SOMA does <strong>not</strong> diagnose any mental health condition</li>
+            <li>Your <strong>name and student ID are never collected</strong></li>
+            <li>Conversations are stored anonymously for research purposes only</li>
+            <li>If you are in crisis, please contact <strong>UCU Counselling</strong> immediately</li>
+        </ul>
+        <p>By clicking below you confirm that you have read and understood this information and you consent to participate.</p>
+        <button class="consent-btn" onclick="startChat()">I Understand - Start Chat</button>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div id="chat-screen">
+        <div id="chat-header">
+            <h2>SOMA</h2>
+            <p>UCU Mental Health Support - Confidential & Anonymous</p>
+        </div>
+
+        <div id="chat-messages"></div>
+
+        <button id="new-session-btn" onclick="startNewSession()">Start New Conversation</button>
+
+        <div id="chat-input-area">
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Type your message here..."
+                onkeypress="handleKeyPress(event)"
+            />
+            <button id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+
+        <div id="chat-footer">
+            SOMA is a support tool only. For emergencies contact UCU Counselling or Butabika Hospital on 0414 305 000.
+        </div>
+    </div>
+
+    <script>
+        function getStudentID() {
+            let studentID = localStorage.getItem('soma_student_id');
+            if (!studentID) {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                studentID = 'STU-';
+                for (let i = 0; i < 6; i++) {
+                    studentID += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                localStorage.setItem('soma_student_id', studentID);
+            }
+            return studentID;
+        }
+
+        const studentID = getStudentID();
+        let conversationHistory = [];
+        let sessionClosed = false;
+
+        function startChat() {
+            document.getElementById('disclaimer-screen').style.display = 'none';
+            document.getElementById('chat-screen').style.display = 'flex';
+            addMessage('soma', 'Hello! I am SOMA, your mental health support assistant at UCU. This is a safe and confidential space. How are you feeling today?');
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') sendMessage();
+        }
+
+        function addMessage(sender, text, isClosing = false) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+
+            if (isClosing) {
+                messageDiv.classList.add('closing-message');
+            } else if (sender === 'soma') {
+                messageDiv.classList.add('soma-message');
+            } else {
+                messageDiv.classList.add('user-message');
+            }
+
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function disableChat() {
+            document.getElementById('user-input').disabled = true;
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('new-session-btn').style.display = 'block';
+            sessionClosed = true;
+        }
+
+        function startNewSession() {
+            conversationHistory = [];
+            sessionClosed = false;
+            document.getElementById('chat-messages').innerHTML = '';
+            document.getElementById('user-input').disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            document.getElementById('new-session-btn').style.display = 'none';
+            addMessage('soma', 'Hello again! I am here whenever you need support. How are you feeling today?');
+        }
+
+        async function sendMessage() {
+            if (sessionClosed) return;
+
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage('user', text);
+            input.value = '';
+
+            conversationHistory.push({ role: 'user', content: text });
+            addMessage('soma', 'SOMA is typing...');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        session_id: studentID,
+                        history: conversationHistory.slice(-10)
+                    })
+                });
+
+                const data = await response.json();
+                const messages = document.getElementById('chat-messages');
+                messages.removeChild(messages.lastChild);
+
+                if (data.closing) {
+                    addMessage('soma', data.response, true);
+                    disableChat();
+                } else {
+                    addMessage('soma', data.response);
+                }
+
+                conversationHistory.push({ role: 'assistant', content: data.response });
+
+            } catch (error) {
+                const messages = document.getElementById('chat-messages');
+                messages.removeChild(messages.lastChild);
+                addMessage('soma', 'I am having trouble connecting right now. If you need immediate support please contact UCU Counselling or Butabika National Referral Hospital on 0414 305 000.');
+            }
+        }
+    </script>
+
+</body>
+</html>

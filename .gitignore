@@ -1,0 +1,4 @@
+encryption.key
+__pycache__/
+*.pyc
+.env

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOMA Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        #login-box {
+            background: white;
+            padding: 32px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #login-box h1 { color: #2c7a4b; margin-bottom: 8px; font-size: 22px; }
+        #login-box p { color: #666; margin-bottom: 20px; font-size: 14px; }
+
+        #login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        #login-box input:focus { border-color: #2c7a4b; }
+
+        #login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #2c7a4b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        #login-error {
+            color: red;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #dashboard-screen { display: none; }
+
+        #dashboard-header {
+            background-color: #2c7a4b;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        #dashboard-header h1 { font-size: 18px; }
+        #dashboard-header p { font-size: 12px; opacity: 0.85; }
+
+        #last-refreshed {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        #logout-btn {
+            background: white;
+            color: #2c7a4b;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+
+        #stats-row {
+            display: flex;
+            gap: 12px;
+            padding: 16px 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            flex: 1;
+            min-width: 90px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-card h2 { font-size: 28px; color: #2c7a4b; margin-bottom: 4px; }
+        .stat-card p { color: #666; font-size: 12px; }
+        .stat-card.crisis h2 { color: #e53e3e; }
+
+        #filter-row {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            margin-top: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-btn {
+            padding: 6px 14px;
+            border: 2px solid #2c7a4b;
+            background: white;
+            color: #2c7a4b;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        .filter-btn.active {
+            background: #2c7a4b;
+            color: white;
+        }
+
+        #main-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            #main-content {
+                flex-direction: row;
+                height: calc(100vh - 200px);
+            }
+        }
+
+        #student-list {
+            background: white;
+            border-bottom: 1px solid #eee;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        @media (min-width: 768px) {
+            #student-list {
+                width: 300px;
+                max-height: none;
+                border-bottom: none;
+                border-right: 1px solid #eee;
+                flex-shrink: 0;
+            }
+        }
+
+        #student-list h3 {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        #delete-all-btn {
+            display: block;
+            width: calc(100% - 32px);
+            margin: 12px 16px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            touch-action: manipulation;
+        }
+
+        #delete-all-btn:hover { background: #c53030; }
+
+        .student-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .student-item:hover { background: #f8fafc; }
+        .student-item.active { background: #f0fff4; border-left: 3px solid #2c7a4b; }
+
+        .student-item .student-id {
+            font-weight: bold;
+            color: #2c7a4b;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+
+        .student-item.crisis-student .student-id { color: #e53e3e; }
+
+        .student-item .student-meta {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+
+        .student-item .student-stats {
+            display: flex;
+            gap: 6px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .badge-normal { background: #f0fff4; color: #2c7a4b; }
+        .badge-crisis { background: #fff5f5; color: #e53e3e; }
+        .badge-count { background: #f0f4f8; color: #555; }
+
+        #conversation-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            #conversation-view {
+                min-height: auto;
+                overflow: hidden;
+            }
+        }
+
+        #conversation-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        #conversation-header h3 { color: #333; font-size: 15px; }
+        #conversation-header p { color: #888; font-size: 11px; margin-top: 3px; }
+
+        .delete-student-btn {
+            background: #fff5f5;
+            color: #e53e3e;
+            border: 1px solid #e53e3e;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 6px;
+            touch-action: manipulation;
+        }
+
+        .delete-student-btn:hover { background: #e53e3e; color: white; }
+
+        #conversation-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #empty-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #aaa;
+            font-size: 13px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .conversation-block {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .conversation-block.crisis-block { border-left: 4px solid #e53e3e; }
+
+        .conversation-block .timestamp {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .message-row { margin-bottom: 8px; }
+
+        .message-label {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .message-label.student-label { color: #2c7a4b; }
+        .message-label.soma-label { color: #555; }
+
+        .message-bubble {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        @media (min-width: 768px) {
+            .message-bubble { max-width: 85%; }
+        }
+
+        .student-bubble { background: #f0fff4; color: #333; }
+        .soma-bubble { background: #f0f4f8; color: #333; }
+        .crisis-bubble { background: #fff5f5; color: #c53030; }
+
+        #refresh-indicator {
+            display: none;
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: #2c7a4b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        /* CONFIRM MODAL */
+        #confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 16px;
+        }
+
+        #confirm-box {
+            background: white;
+            border-radius: 12px;
+            padding: 28px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+        }
+
+        #confirm-box h3 { color: #333; margin-bottom: 10px; font-size: 17px; }
+        #confirm-box p { color: #666; font-size: 14px; margin-bottom: 20px; }
+
+        .confirm-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .confirm-yes {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .confirm-no {
+            background: #f0f4f8;
+            color: #333;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-screen">
+        <div id="login-box">
+            <h1>SOMA Admin</h1>
+            <p>Enter your administrator password to access the dashboard</p>
+            <input
+                type="password"
+                id="password-input"
+                placeholder="Enter password"
+                onkeypress="handleLoginKey(event)"
+            />
+            <button id="login-btn" onclick="login()">Login</button>
+            <p id="login-error">Incorrect password. Please try again.</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-screen">
+        <div id="dashboard-header">
+            <div>
+                <h1>SOMA Admin Dashboard</h1>
+                <p>Uganda Christian University - Anonymous Conversation Logs</p>
+                <p id="last-refreshed">Loading...</p>
+            </div>
+            <button id="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="stats-row">
+            <div class="stat-card">
+                <h2 id="total-students">0</h2>
+                <p>Total Students</p>
+            </div>
+            <div class="stat-card">
+                <h2 id="total-messages">0</h2>
+                <p>Total Messages</p>
+            </div>
+            <div class="stat-card crisis">
+                <h2 id="total-crisis">0</h2>
+                <p>Crisis Detections</p>
+            </div>
+        </div>
+
+        <div id="filter-row">
+            <button class="filter-btn active" onclick="filterStudents('all', this)">All Students</button>
+            <button class="filter-btn" onclick="filterStudents('crisis', this)">Crisis Only</button>
+            <button class="filter-btn" onclick="filterStudents('normal', this)">Normal Only</button>
+        </div>
+
+        <div id="main-content">
+            <div id="student-list">
+                <h3>Students</h3>
+                <button id="delete-all-btn" onclick="confirmDeleteAll()">Delete All Conversations</button>
+                <div id="student-items"></div>
+            </div>
+
+            <div id="conversation-view">
+                <div id="conversation-header">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <h3 id="conv-title">Select a student</h3>
+                            <p id="conv-meta"></p>
+                        </div>
+                        <button id="delete-student-btn" class="delete-student-btn" style="display:none" onclick="confirmDeleteStudent()">Delete This Student</button>
+                    </div>
+                </div>
+                <div id="conversation-messages">
+                    <div id="empty-state">
+                        Select a student from the list to view their conversation
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="refresh-indicator">Refreshing...</div>
+
+    <!-- CONFIRM MODAL -->
+    <div id="confirm-modal">
+        <div id="confirm-box">
+            <h3 id="confirm-title">Are you sure?</h3>
+            <p id="confirm-message">This action cannot be undone.</p>
+            <div class="confirm-btns">
+                <button class="confirm-yes" onclick="executeDelete()">Yes, Delete</button>
+                <button class="confirm-no" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminPassword = '';
+        let allStudents = [];
+        let currentFilter = 'all';
+        let selectedStudentId = null;
+        let deleteAction = null;
+
+        function handleLoginKey(event) {
+            if (event.key === 'Enter') login();
+        }
+
+        async function login() {
+            const password = document.getElementById('password-input').value;
+            try {
+                const response = await fetch('http://127.0.0.1:8000/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                if (response.ok) {
+                    adminPassword = password;
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('dashboard-screen').style.display = 'block';
+                    loadData();
+                    startAutoRefresh();
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/admin/conversations?password=${adminPassword}`);
+                const data = await response.json();
+
+                allStudents = data.students;
+
+                document.getElementById('total-students').textContent = data.total_students;
+                document.getElementById('total-messages').textContent = data.total_conversations;
+                document.getElementById('total-crisis').textContent = data.total_crisis;
+
+                const now = new Date().toLocaleTimeString();
+                document.getElementById('last-refreshed').textContent = 'Last updated: ' + now;
+
+                let filtered = allStudents;
+                if (currentFilter === 'crisis') filtered = allStudents.filter(s => s.crisis_detected);
+                if (currentFilter === 'normal') filtered = allStudents.filter(s => !s.crisis_detected);
+                renderStudentList(filtered);
+
+                if (selectedStudentId) {
+                    const updatedStudent = allStudents.find(s => s.session_id === selectedStudentId);
+                    if (updatedStudent) showConversationById(updatedStudent);
+                }
+
+            } catch (e) {
+                document.getElementById('last-refreshed').textContent = 'Connection error - retrying...';
+            }
+        }
+
+        function startAutoRefresh() {
+            setInterval(async function() {
+                if (adminPassword) {
+                    const indicator = document.getElementById('refresh-indicator');
+                    indicator.style.display = 'block';
+                    await loadData();
+                    setTimeout(() => { indicator.style.display = 'none'; }, 1000);
+                }
+            }, 30000);
+        }
+
+        function renderStudentList(students) {
+            const container = document.getElementById('student-items');
+            container.innerHTML = '';
+
+            if (students.length === 0) {
+                container.innerHTML = '<p style="padding:16px;color:#aaa;font-size:13px">No students found.</p>';
+                return;
+            }
+
+            students.forEach((student) => {
+                const div = document.createElement('div');
+                div.classList.add('student-item');
+                if (student.crisis_detected) div.classList.add('crisis-student');
+                if (student.session_id === selectedStudentId) div.classList.add('active');
+                div.onclick = () => showConversation(student, div);
+
+                div.innerHTML = `
+                    <div class="student-id">${student.session_id}</div>
+                    <div class="student-meta">First seen: ${student.first_seen}</div>
+                    <div class="student-meta">Last seen: ${student.last_seen}</div>
+                    <div class="student-stats">
+                        <span class="badge badge-count">${student.total_messages} messages</span>
+                        ${student.crisis_detected
+                            ? '<span class="badge badge-crisis">Crisis</span>'
+                            : '<span class="badge badge-normal">Normal</span>'}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function showConversation(student, element) {
+            document.querySelectorAll('.student-item').forEach(i => i.classList.remove('active'));
+            element.classList.add('active');
+            selectedStudentId = student.session_id;
+            showConversationById(student);
+            document.getElementById('delete-student-btn').style.display = 'block';
+
+            if (window.innerWidth < 768) {
+                document.getElementById('conversation-view').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function showConversationById(student) {
+            document.getElementById('conv-title').textContent = student.session_id;
+            document.getElementById('conv-meta').textContent =
+                `${student.total_messages} messages · First: ${student.first_seen} · Last: ${student.last_seen}`;
+
+            const container = document.getElementById('conversation-messages');
+            container.innerHTML = '';
+
+            student.messages.forEach(msg => {
+                const block = document.createElement('div');
+                block.classList.add('conversation-block');
+                if (msg.is_crisis === 'yes') block.classList.add('crisis-block');
+
+                block.innerHTML = `
+                    <div class="timestamp">${msg.timestamp} ${msg.is_crisis === 'yes' ? '- Crisis detected' : ''}</div>
+                    <div class="message-row">
+                        <div class="message-label student-label">Student</div>
+                        <div class="message-bubble ${msg.is_crisis === 'yes' ? 'crisis-bubble' : 'student-bubble'}">
+                            ${msg.user_message}
+                        </div>
+                    </div>
+                    <div class="message-row">
+                        <div class="message-label soma-label">SOMA</div>
+                        <div class="message-bubble soma-bubble">
+                            ${msg.soma_response}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(block);
+            });
+        }
+
+        function filterStudents(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = type;
+
+            let filtered = allStudents;
+            if (type === 'crisis') filtered = allStudents.filter(s => s.crisis_detected);
+            if (type === 'normal') filtered = allStudents.filter(s => !s.crisis_detected);
+
+            renderStudentList(filtered);
+        }
+
+        function confirmDeleteStudent() {
+            if (!selectedStudentId) return;
+            deleteAction = 'student';
+            document.getElementById('confirm-title').textContent = 'Delete this student?';
+            document.getElementById('confirm-message').textContent =
+                'All conversations for ' + selectedStudentId + ' will be permanently deleted from the database.';
+            document.getElementById('confirm-modal').style.display = 'flex';
+        }
+
+        function confirmDeleteAll() {
+            deleteAction = 'all';
+            document.getElementById('confirm-title').textContent = 'Delete all conversations?';
+            document.getElementById('confirm-message').textContent =
+                'Every conversation from every student will be permanently deleted. This cannot be undone.';
+            document.getElementById('confirm-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('confirm-modal').style.display = 'none';
+        
+        }
+
+        async function executeDelete() {
+    const action = deleteAction;
+    const studentId = selectedStudentId;
+    deleteAction = null;
+    closeModal();
+
+    console.log('Delete action:', action);
+    console.log('Selected student:', studentId);
+
+    if (action === 'student' && studentId) {
+        try {
+            await fetch(`http://127.0.0.1:8000/admin/delete/${studentId}?password=${adminPassword}`, {
+                method: 'DELETE'
+            });
+            selectedStudentId = null;
+            document.getElementById('conv-title').textContent = 'Select a student';
+            document.getElementById('conv-meta').textContent = '';
+            document.getElementById('conversation-messages').innerHTML = '<div id="empty-state">Select a student from the list to view their conversation</div>';
+            document.getElementById('delete-student-btn').style.display = 'none';
+            await loadData();
+        } catch (e) {
+            alert('Error deleting student conversations.');
+        }
+    }
+
+    if (action === 'all') {
+        try {
+            await fetch(`http://127.0.0.1:8000/admin/delete-all?password=${adminPassword}`, {
+                method: 'DELETE'
+            });
+            selectedStudentId = null;
+            document.getElementById('conv-title').textContent = 'Select a student';
+            document.getElementById('conv-meta').textContent = '';
+            document.getElementById('conversation-messages').innerHTML = '<div id="empty-state">Select a student from the list to view their conversation</div>';
+            document.getElementById('delete-student-btn').style.display = 'none';
+            await loadData();
+        } catch (e) {
+            alert('Error deleting all conversations.');
+        }
+    }
+}
+
+        function logout() {
+            adminPassword = '';
+            selectedStudentId = null;
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('password-input').value = '';
+        }
+    </script>
+
+</body>
+</html>
